@@ -4,8 +4,10 @@
  * Version            : V1.0.0
  * Date               : 2021/02/25
  * Description        :
+ *********************************************************************************
  * Copyright (c) 2021 Nanjing Qinheng Microelectronics Co., Ltd.
- * SPDX-License-Identifier: Apache-2.0
+ * Attention: This software (modified or not) and binary are used for 
+ * microcontroller manufactured by Nanjing Qinheng Microelectronics.
  *******************************************************************************/
 
 	.section	.init,"ax",@progbits
@@ -169,7 +171,7 @@ handle_reset:
 	li t0, 0x3
 	csrw 0x804, t0
 	
-    li t0, 0x1888
+    li t0, 0x88
     csrs mstatus, t0
 	la t0, _vector_base
 
@@ -179,7 +181,8 @@ handle_reset:
 
 	la t0, main
 	csrw mepc, t0
+	
+	
+	mret
 
-	j 0x40000
 
-    mret

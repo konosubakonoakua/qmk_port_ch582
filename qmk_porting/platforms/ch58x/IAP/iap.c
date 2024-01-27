@@ -22,7 +22,7 @@ static volatile uint16_t usb_counter = 0;
 static const uint8_t msc_ram_descriptor[] = {
     USB_DEVICE_DESCRIPTOR_INIT(USB_2_0, 0x00, 0x00, 0x00, USBD_VID, USBD_PID, 0x0200, 0x01),
     USB_CONFIG_DESCRIPTOR_INIT(USB_CONFIG_SIZE, 0x01, 0x01, USB_CONFIG_BUS_POWERED, USBD_MAX_POWER),
-    MSC_DESCRIPTOR_INIT(0x00, MSC_OUT_EP, MSC_IN_EP, 0x02),
+    MSC_DESCRIPTOR_INIT(0x00, MSC_OUT_EP, MSC_IN_EP, MSC_MAX_MPS, 0x02),
     ///////////////////////////////////////
     /// string0 descriptor
     ///////////////////////////////////////
@@ -498,7 +498,6 @@ int main()
 #if !defined ESB_ENABLE || ESB_ENABLE == 1
 #ifdef BATTERY_MEASURE_PIN
     // do a power check, only on keyboard
-
     setPinInput(BATTERY_MEASURE_PIN);
     battery_init();
 

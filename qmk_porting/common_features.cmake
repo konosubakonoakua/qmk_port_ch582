@@ -43,6 +43,15 @@ if(GRAVE_ESC_ENABLE)
     )
 endif()
 
+# DYNAMIC_MACRO_ENABLE
+if(DYNAMIC_MACRO_ENABLE)
+    message(STATUS "DYNAMIC_MACRO_ENABLE")
+    add_definitions(-DDYNAMIC_MACRO_ENABLE)
+    list(APPEND quantum_SOURCES
+        "${QMK_BASE_DIR}/quantum/process_keycode/process_dynamic_macro.c"
+    )
+endif()
+
 # ENCODER_ENABLE
 if(ENCODER_ENABLE)
     add_definitions(-DENCODER_ENABLE)
@@ -65,6 +74,7 @@ if(UCIS_ENABLE)
     message(STATUS "UCIS_ENABLE")
     list(APPEND quantum_SOURCES
         "${QMK_BASE_DIR}/quantum/process_keycode/process_ucis.c"
+        "${QMK_BASE_DIR}/quantum/unicode/ucis.c"
     )
 endif()
 
@@ -75,6 +85,7 @@ if(UNICODEMAP_ENABLE)
     message(STATUS "UNICODEMAP_ENABLE")
     list(APPEND quantum_SOURCES
         "${QMK_BASE_DIR}/quantum/process_keycode/process_unicodemap.c"
+        "${QMK_BASE_DIR}/quantum/unicode/unicodemap.c"
     )
 endif()
 
@@ -177,8 +188,8 @@ if(RGB_MATRIX_ENABLE)
 
     if(RGB_MATRIX_DRIVER STREQUAL "WS2812")
         set(WS2812_REQUIRED ON CACHE BOOL "QMK" FORCE)
-    elseif(RGB_MATRIX_DRIVER STREQUAL "AW20216")
-        set(AW20216_REQUIRED ON CACHE BOOL "QMK" FORCE)
+    elseif(RGB_MATRIX_DRIVER STREQUAL "AW20216S")
+        set(AW20216S_REQUIRED ON CACHE BOOL "QMK" FORCE)
     endif()
 
     message(STATUS "RGB_MATRIX_ENABLE")
@@ -201,6 +212,7 @@ if(AUXILIARY_RGB_ENABLE)
         add_definitions(-DRGB_MATRIX_CUSTOM_KB -DRGB_RAW_ENABLE)
         list(APPEND QMK_PORTING_SOURCES
             "${CMAKE_CURRENT_LIST_DIR}/protocol/auxiliary_rgb.c"
+            "${CMAKE_CURRENT_LIST_DIR}/protocol/dynamic_lighting.c"
             "${CMAKE_CURRENT_LIST_DIR}/protocol/openrgb.c"
             "${CMAKE_CURRENT_LIST_DIR}/protocol/signalrgb.c"
         )
@@ -283,6 +295,13 @@ endif()
 # WS2812 REQUIRED
 if(WS2812_REQUIRED)
     add_definitions(-DWS2812)
+
+    if(RGBLIGHT_ENABLE)
+        add_definitions(-DRGBLIGHT_WS2812)
+    elseif(RGB_MATRIX_ENABLE)
+        add_definitions(-DRGB_MATRIX_WS2812)
+    endif()
+
     message(STATUS "WS2812_REQUIRED")
     message(STATUS "WS2812_DRIVER = ${WS2812_DRIVER}")
 
@@ -343,16 +362,23 @@ if(WPM_ENABLE)
     )
 endif()
 
-# AW20216 REQUIRED
-if(AW20216_REQUIRED)
-    add_definitions(-DAW20216)
-    message(STATUS "AW20216_REQUIRED")
+# AW20216S REQUIRED
+if(AW20216S_REQUIRED)
+    add_definitions(-DAW20216S)
+
+    if(RGBLIGHT_ENABLE)
+        add_definitions(-DRGBLIGHT_AW20216S)
+    elseif(RGB_MATRIX_ENABLE)
+        add_definitions(-DRGB_MATRIX_AW20216S)
+    endif()
+
+    message(STATUS "AW20216S_REQUIRED")
     include_directories(${QMK_BASE_DIR}/drivers/led)
     list(APPEND quantum_SOURCES
-        "${QMK_BASE_DIR}/drivers/led/aw20216.c"
+        "${QMK_BASE_DIR}/drivers/led/aw20216s.c"
     )
     list(APPEND QMK_PORTING_SOURCES
-        "${CMAKE_CURRENT_LIST_DIR}/drivers/aw20216/aw20216_supplement.c"
+        "${CMAKE_CURRENT_LIST_DIR}/drivers/aw20216s/aw20216s_supplement.c"
     )
     set(SPI_MASTER_ENABLE ON CACHE BOOL "KB" FORCE)
 endif()
@@ -429,7 +455,17 @@ if(ESB_ENABLE)
         message(STATUS "ESB_ROLE = dongle")
 
         if(NOT USB_ENABLE)
-            message(FATAL_ERROR "ESB_ROLE: dongle requires USB_ENABLE.")
+            message(WARNING "USB forced on for ESB dongle role.")
+            add_definitions(-DUSB_ENABLE)
+            list(APPEND QMK_PORTING_SOURCES
+                "${CMAKE_CURRENT_LIST_DIR}/../CherryUSB/core/usbd_core.c"
+                "${CMAKE_CURRENT_LIST_DIR}/../CherryUSB/port/ch32/usb_ch58x_dc_usbfs.c"
+                "${CMAKE_CURRENT_LIST_DIR}/../CherryUSB/class/hid/usbd_hid.c"
+                "${CMAKE_CURRENT_LIST_DIR}/protocol/protocol_usb.c"
+                "${CMAKE_CURRENT_LIST_DIR}/platforms/ch58x/usb_main.c"
+                "${CMAKE_CURRENT_LIST_DIR}/protocol/usb_interface.c"
+                "${CMAKE_CURRENT_LIST_DIR}/protocol/usb_util.c"
+            )
         endif()
     endif()
 endif()

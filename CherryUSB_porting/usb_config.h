@@ -47,7 +47,11 @@
 #define EP_NUMS                 USB_NUM_BIDIR_ENDPOINTS
 
 /* Ep0 max transfer buffer, specially for receiving data from ep0 out */
+#ifdef RGB_RAW_ENABLE
+#define CONFIG_USBDEV_REQUEST_BUFFER_LEN 512
+#else
 #define CONFIG_USBDEV_REQUEST_BUFFER_LEN 256
+#endif
 
 /* Setup packet log for debug */
 // #define CONFIG_USBDEV_SETUP_LOG_PRINT
@@ -129,6 +133,13 @@
 #define CONFIG_USBHOST_MAX_INTERFACES       6
 #define CONFIG_USBHOST_MAX_INTF_ALTSETTINGS 1
 #define CONFIG_USBHOST_MAX_ENDPOINTS        4
+
+#define CONFIG_USBHOST_MAX_CDC_ACM_CLASS 4
+#define CONFIG_USBHOST_MAX_HID_CLASS     4
+#define CONFIG_USBHOST_MAX_MSC_CLASS     2
+#define CONFIG_USBHOST_MAX_AUDIO_CLASS   1
+#define CONFIG_USBHOST_MAX_VIDEO_CLASS   1
+#define CONFIG_USBHOST_MAX_RNDIS_CLASS   1
 
 #define CONFIG_USBHOST_DEV_NAMELEN 16
 

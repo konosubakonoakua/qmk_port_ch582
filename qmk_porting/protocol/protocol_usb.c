@@ -25,20 +25,23 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #endif
 #ifdef RGB_RAW_ENABLE
 #include "auxiliary_rgb.h"
+#include "dynamic_lighting.h"
 #endif
 
 extern int usbd_deinitialize();
 
 static void send_keyboard(report_keyboard_t *report)
 {
-#ifdef NKRO_ENABLE
-    if (keymap_config.nkro) {
-        hid_keyboard_send_report(KEYBOARD_MODE_NKRO, (uint8_t *)&report->nkro, EXKEY_IN_EP_SIZE);
-    } else
-#endif
-    {
+    if (!keyboard_protocol) {
+        hid_keyboard_send_report(KEYBOARD_MODE_BIOS, &report->mods, 8);
+    } else {
         hid_keyboard_send_report(KEYBOARD_MODE_BIOS, (uint8_t *)report, KEYBOARD_REPORT_SIZE);
     }
+}
+
+static void send_nkro(report_nkro_t *report)
+{
+    hid_keyboard_send_report(KEYBOARD_MODE_NKRO, (uint8_t *)&report, EXKEY_IN_EP_SIZE);
 }
 
 static void send_mouse(report_mouse_t *report)
@@ -68,6 +71,11 @@ static void send_qmk_raw(uint8_t *data, uint8_t length)
 static void send_rgb_raw(uint8_t *data, uint8_t length)
 {
     hid_rgb_raw_send_report(data, length);
+}
+
+static void control_send_rgb_raw(uint8_t report_id, uint8_t **data, uint32_t *len)
+{
+    dynamic_lighting_handle_get_report(report_id, data, len);
 }
 #endif
 
@@ -111,6 +119,7 @@ __HIGH_CODE static void protocol_task()
 const ch582_interface_t ch582_protocol_usb = {
     .ch582_common_driver.keyboard_leds = keyboard_leds,
     .ch582_common_driver.send_keyboard = send_keyboard,
+    .ch582_common_driver.send_nkro = send_nkro,
     .ch582_common_driver.send_mouse = send_mouse,
     .ch582_common_driver.send_extra = send_extra,
 #ifdef RAW_ENABLE
@@ -120,6 +129,8 @@ const ch582_interface_t ch582_protocol_usb = {
 #ifdef RGB_RAW_ENABLE
     .send_rgb_raw = send_rgb_raw,
     .receive_rgb_raw = rgb_raw_hid_receive,
+    .control_send_rgb_raw = control_send_rgb_raw,
+    .receive_rgb_raw_control = rgb_raw_control_receive,
 #endif
     .ch582_platform_initialize = platform_initialize,
     .ch582_protocol_setup = protocol_setup,

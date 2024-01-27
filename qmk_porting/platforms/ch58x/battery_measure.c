@@ -19,8 +19,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "battery_measure.h"
 #include "quantum.h"
 
-#ifdef BATTERY_MEASURE_PIN
-
 static volatile uint8_t last_percentage = 100;
 static uint32_t last_measure = 0;
 
@@ -84,6 +82,8 @@ static inline void battery_config_channel(pin_t pin)
         case A12:
             ADC_ChannelCfg(2);
             break;
+        default:
+            break;
     }
 }
 
@@ -113,7 +113,7 @@ __attribute__((weak)) __INTERRUPT __HIGH_CODE void GPIOB_IRQHandler()
 __attribute__((noinline)) static void battery_critical_prerequisite()
 {
 #if __BUILDING_APP__
-    shutdown_user();
+    shutdown_kb(false);
 #endif
     battery_critical_gpio_prerequisite();
 
@@ -138,7 +138,7 @@ __attribute__((noinline)) static void battery_critical_prerequisite()
     } while (R8_SLP_WAKE_CTRL != temp);
 }
 
-__attribute__((noreturn)) __HIGH_CODE static void battery_handle_critical()
+__attribute__((noreturn)) __HIGH_CODE void battery_handle_critical()
 {
     battery_critical_prerequisite();
     WAIT_FOR_DBG;
@@ -180,6 +180,7 @@ __attribute__((noreturn)) __HIGH_CODE static void battery_handle_critical()
 
 __attribute__((weak)) void battery_init()
 {
+#if defined BATTERY_MEASURE_PIN && BATTERY_MEASURE_PIN != NO_PIN
     switch (BATTERY_MEASURE_PIN) {
         case A0:
         case A1:
@@ -195,10 +196,12 @@ __attribute__((weak)) void battery_init()
             break;
     }
     ADC_ExtSingleChSampInit(SampleFreq_3_2, ADC_PGA_2);
+#endif
 }
 
 __attribute__((weak)) uint16_t battery_measure()
 {
+#if defined BATTERY_MEASURE_PIN && BATTERY_MEASURE_PIN != NO_PIN
     uint16_t adcBuff[15];
     int16_t RoughCalib_Value = ADC_DataCalib_Rough();
 
@@ -220,6 +223,9 @@ __attribute__((weak)) uint16_t battery_measure()
     }
 
     return adc_data;
+#else
+    return UINT16_MAX;
+#endif
 }
 
 __attribute__((weak)) uint8_t battery_calculate(uint16_t adcVal)
@@ -247,23 +253,25 @@ done:
 #ifdef POWER_DETECT_PIN
     if (!readPin(POWER_DETECT_PIN)) {
         // with cable unpluged, battery level should get lower only
-        if (percent < last_percentage) {
-            last_percentage = percent;
+        if (percent < battery_get_last_percentage()) {
+            battery_update_last_percentage(percent);
         }
     } else {
-        last_percentage = percent;
+        battery_update_last_percentage(percent);
     }
 #else
-    last_percentage = percent;
+    battery_update_last_percentage(percent);
 #endif
 #if __BUILDING_APP__
-    last_measure = timer_read32();
-    if (!last_measure) {
-        last_measure++;
-    }
+    battery_update_last_measure();
 #endif
 
-    return last_percentage;
+    return battery_get_last_percentage();
+}
+
+void battery_update_last_percentage(uint8_t percentage)
+{
+    last_percentage = percentage;
 }
 
 uint8_t battery_get_last_percentage()
@@ -271,9 +279,15 @@ uint8_t battery_get_last_percentage()
     return last_percentage;
 }
 
+void battery_update_last_measure()
+{
+    last_measure = timer_read32();
+    if (!last_measure) {
+        last_measure++;
+    }
+}
+
 uint32_t battery_get_last_measure()
 {
     return last_measure;
 }
-
-#endif

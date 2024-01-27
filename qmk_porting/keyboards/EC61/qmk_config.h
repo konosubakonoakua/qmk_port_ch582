@@ -49,7 +49,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #ifdef RGB_MATRIX_ENABLE
 
-#define RGB_MATRIX_KEYPRESSES
 // #define RGB_MATRIX_DEFAULT_MODE RGB_MATRIX_SOLID_REACTIVE
 #define RGBLED_NUM                    61
 #define RGB_MATRIX_LED_COUNT          RGBLED_NUM
@@ -103,6 +102,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define ENABLE_RGB_MATRIX_PIXEL_RAIN
 #define ENABLE_RGB_MATRIX_PIXEL_FLOW
 #define ENABLE_RGB_MATRIX_PIXEL_FRACTAL
+#define ENABLE_RGB_MATRIX_FLOWER_BLOOMING
+#define ENABLE_RGB_MATRIX_RIVERFLOW
+#define ENABLE_RGB_MATRIX_STARLIGHT
+#define ENABLE_RGB_MATRIX_STARLIGHT_DUAL_HUE
+#define ENABLE_RGB_MATRIX_STARLIGHT_DUAL_SAT
 
 #define ESB_INDICATOR [1][5]
 #endif
@@ -110,7 +114,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define AUXILIARY_RGB_USE_UNIVERSAL_BRIGHTNESS
 #endif
 
-#ifdef AW20216
+#ifdef AW20216S
 #define AW_GLOBAL_CURRENT_MAX 255
 #define AW_SCALING_MAX        255
 

@@ -20,11 +20,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <stdint.h>
 #include "host.h"
 
+extern uint8_t keyboard_protocol;
+extern uint8_t keyboard_idle;
+
 #ifdef RAW_ENABLE
 typedef void (*qmk_raw_handler_t)(uint8_t *, uint8_t);
 #endif
 #ifdef RGB_RAW_ENABLE
 typedef void (*rgb_raw_handler_t)(uint8_t *, uint8_t);
+typedef void (*rgb_raw_control_send_handler_t)(uint8_t, uint8_t **, uint32_t *);
+typedef void (*rgb_raw_control_receive_handler_t)(uint8_t, uint8_t *, uint32_t);
 #endif
 typedef void (*ch582_driver_t)();
 
@@ -37,6 +42,8 @@ typedef struct _ch582_interface_t {
 #ifdef RGB_RAW_ENABLE
     rgb_raw_handler_t send_rgb_raw;
     rgb_raw_handler_t receive_rgb_raw;
+    rgb_raw_control_send_handler_t control_send_rgb_raw;
+    rgb_raw_control_receive_handler_t receive_rgb_raw_control;
 #endif
     ch582_driver_t ch582_platform_initialize;
     ch582_driver_t ch582_protocol_setup;
@@ -60,4 +67,6 @@ void receive_qmk_raw(uint8_t *data, uint8_t length);
 #ifdef RGB_RAW_ENABLE
 void rgb_raw_hid_send(uint8_t *data, uint8_t length);
 void receive_rgb_raw(uint8_t *data, uint8_t length);
+void rgb_raw_control_send(uint8_t report_id, uint8_t **data, uint32_t *len);
+void receive_rgb_raw_control(uint8_t report_id, uint8_t *data, uint32_t len);
 #endif

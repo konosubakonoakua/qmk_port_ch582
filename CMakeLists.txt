@@ -33,8 +33,21 @@ file(GLOB NRF_BIN_PATH "${CMAKE_CURRENT_LIST_DIR}/utils/nrf*/bin")
 find_program(MERGEHEX_PATH NAMES mergehex PATHS ${NRF_BIN_PATH} REQUIRED)
 message(STATUS "Found mergehex: ${MERGEHEX_PATH}")
 
-set(TOOLCHAIN_PREFIX riscv-none-embed)
-set(ADDITIONAL_TOOLCHAIN_PATH "${CMAKE_CURRENT_LIST_DIR}/utils/riscv-none-embed-gcc/bin/")
+if(NOT DEFINED TOOLCHAIN_PREFIX)
+    if(EXISTS "${CMAKE_CURRENT_LIST_DIR}/utils/riscv-none-elf-gcc/bin/riscv-none-elf-gcc")
+        set(TOOLCHAIN_PREFIX riscv-none-elf)
+    elseif(EXISTS "${CMAKE_CURRENT_LIST_DIR}/utils/riscv-none-embed-gcc/bin/riscv-none-embed-gcc")
+        set(TOOLCHAIN_PREFIX riscv-none-embed)
+    endif()
+endif()
+
+if(NOT DEFINED ADDITIONAL_TOOLCHAIN_PATH)
+    if(EXISTS "${CMAKE_CURRENT_LIST_DIR}/utils/riscv-none-elf-gcc/bin/riscv-none-elf-gcc")
+        set(ADDITIONAL_TOOLCHAIN_PATH "${CMAKE_CURRENT_LIST_DIR}/utils/riscv-none-elf-gcc/bin/")
+    elseif(EXISTS "${CMAKE_CURRENT_LIST_DIR}/utils/riscv-none-embed-gcc/bin/riscv-none-embed-gcc")
+        set(ADDITIONAL_TOOLCHAIN_PATH "${CMAKE_CURRENT_LIST_DIR}/utils/riscv-none-embed-gcc/bin/")
+    endif()
+endif()
 
 find_program(CMAKE_C_COMPILER NAMES ${TOOLCHAIN_PREFIX}-gcc PATHS ${ADDITIONAL_TOOLCHAIN_PATH} REQUIRED)
 message(STATUS "Found ${TOOLCHAIN_PREFIX}-gcc: ${CMAKE_C_COMPILER}")
@@ -55,7 +68,7 @@ set(CMAKE_C_STANDARD 99)
 add_compile_options(-march=rv32imac -mabi=ilp32 -mcmodel=medany -msmall-data-limit=8 -mno-save-restore -std=gnu99)
 add_compile_options(-fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections -fno-common)
 add_compile_options(--param highcode-gen-section-name=1)
-add_compile_options(-Wall -Wno-comment -Wno-enum-compare)
+add_compile_options(-Wall -Wno-comment -Wno-enum-compare -Wno-unused-but-set-variable)
 add_compile_options(-fdiagnostics-color=always)
 
 if(NOT CMAKE_BUILD_TYPE)
@@ -68,7 +81,7 @@ if("${CMAKE_BUILD_TYPE}" STREQUAL "Release")
     add_compile_options(-Ofast)
 elseif("${CMAKE_BUILD_TYPE}" STREQUAL "RelWithDebInfo")
     message(STATUS "Maximum optimization for speed, debug info included")
-    add_compile_options(-Ofast -g)
+    add_compile_options(-Ofast -g3)
 elseif("${CMAKE_BUILD_TYPE}" STREQUAL "MinSizeRel")
     message(STATUS "Maximum optimization for size")
     add_compile_options(-Os)
@@ -79,7 +92,7 @@ endif()
 
 execute_process(COMMAND git describe --always --dirty
     WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
-    TIMEOUT 5
+    TIMEOUT 10
     OUTPUT_VARIABLE GIT_VERSION
     OUTPUT_STRIP_TRAILING_WHITESPACE
 )

@@ -25,16 +25,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "keycode_config.h"
 #include "protocol.h"
 #if ESB_ENABLE == 2
-#include "config.h"
-#define memcmp(...) tmos_memcmp(__VA_ARGS__) ? 0 : 1
-#define strlen      tmos_strlen
-#define memset      tmos_memset
-#define memcpy      tmos_memcpy
 extern void esb_dongle_usb_report_sent(uint8_t interface);
 #endif
 
-uint8_t keyboard_protocol = 1;
-uint8_t keyboard_idle = 0;
 static uint8_t *hid_descriptor = NULL;
 
 #ifdef FORCE_NKRO
@@ -69,6 +62,9 @@ USB_NOCACHE_RAM_SECTION USB_MEM_ALIGNX uint8_t rgbraw_out_buffer[RGBRAW_OUT_EP_S
 USB_NOCACHE_RAM_SECTION USB_MEM_ALIGNX uint8_t qmkraw_out_buffer[QMKRAW_OUT_EP_SIZE];
 #endif
 
+#if defined ESB_ENABLE && ESB_ENABLE == 2
+__HIGH_CODE
+#endif
 void usbd_hid_kbd_in_callback(uint8_t ep, uint32_t nbytes)
 {
     keyboard_state = HID_STATE_IDLE;
@@ -77,6 +73,9 @@ void usbd_hid_kbd_in_callback(uint8_t ep, uint32_t nbytes)
 #endif
 }
 
+#if defined ESB_ENABLE && ESB_ENABLE == 2
+__HIGH_CODE
+#endif
 void usbd_hid_kbd_out_callback(uint8_t ep, uint32_t nbytes)
 {
     keyboard_leds_set(kbd_out_buffer[0]);
@@ -84,6 +83,9 @@ void usbd_hid_kbd_out_callback(uint8_t ep, uint32_t nbytes)
 }
 
 #ifdef RGB_RAW_ENABLE
+#if defined ESB_ENABLE && ESB_ENABLE == 2
+__HIGH_CODE
+#endif
 void usbd_hid_rgb_raw_in_callback(uint8_t ep, uint32_t nbytes)
 {
     rgbraw_state = HID_STATE_IDLE;
@@ -92,6 +94,9 @@ void usbd_hid_rgb_raw_in_callback(uint8_t ep, uint32_t nbytes)
 #endif
 }
 
+#if defined ESB_ENABLE && ESB_ENABLE == 2
+__HIGH_CODE
+#endif
 void usbd_hid_rgb_raw_out_callback(uint8_t ep, uint32_t nbytes)
 {
     receive_rgb_raw(rgbraw_out_buffer, sizeof(rgbraw_out_buffer));
@@ -99,6 +104,9 @@ void usbd_hid_rgb_raw_out_callback(uint8_t ep, uint32_t nbytes)
 }
 #endif
 
+#if defined ESB_ENABLE && ESB_ENABLE == 2
+__HIGH_CODE
+#endif
 void usbd_hid_exkey_in_callback(uint8_t ep, uint32_t nbytes)
 {
     extrakey_state = HID_STATE_IDLE;
@@ -108,6 +116,9 @@ void usbd_hid_exkey_in_callback(uint8_t ep, uint32_t nbytes)
 }
 
 #ifdef RAW_ENABLE
+#if defined ESB_ENABLE && ESB_ENABLE == 2
+__HIGH_CODE
+#endif
 void usbd_hid_qmk_raw_in_callback(uint8_t ep, uint32_t nbytes)
 {
     qmkraw_state = HID_STATE_IDLE;
@@ -116,6 +127,9 @@ void usbd_hid_qmk_raw_in_callback(uint8_t ep, uint32_t nbytes)
 #endif
 }
 
+#if defined ESB_ENABLE && ESB_ENABLE == 2
+__HIGH_CODE
+#endif
 void usbd_hid_qmk_raw_out_callback(uint8_t ep, uint32_t nbytes)
 {
     receive_qmk_raw(qmkraw_out_buffer, sizeof(qmkraw_out_buffer));
@@ -353,12 +367,28 @@ void init_usb_driver()
     usbd_initialize();
 }
 
-uint8_t usbh_hid_get_idle(uint8_t intf, uint8_t report_id)
+#if defined ESB_ENABLE && ESB_ENABLE == 2
+__HIGH_CODE
+#endif
+void usbd_hid_get_report(uint8_t intf, uint8_t report_id, uint8_t report_type, uint8_t **data, uint32_t *len)
+{
+#ifdef RGB_RAW_ENABLE
+    if (intf == InterfaceNumber_extra_key && report_type == USB_REQUEST_SET_FEATURE) {
+        rgb_raw_control_send(report_id, data, len);
+    } else
+#endif
+    {
+        (*data[0]) = 0;
+        *len = 1;
+    }
+}
+
+uint8_t usbd_hid_get_idle(uint8_t intf, uint8_t report_id)
 {
     return keyboard_idle;
 }
 
-uint8_t usbh_hid_get_protocol(uint8_t intf)
+uint8_t usbd_hid_get_protocol(uint8_t intf)
 {
     if (intf == InterfaceNumber_keyboard) {
         return keyboard_protocol;
@@ -367,7 +397,19 @@ uint8_t usbh_hid_get_protocol(uint8_t intf)
     }
 }
 
-void usbh_hid_set_idle(uint8_t intf, uint8_t report_id, uint8_t duration)
+#if defined ESB_ENABLE && ESB_ENABLE == 2
+__HIGH_CODE
+#endif
+void usbd_hid_set_report(uint8_t intf, uint8_t report_id, uint8_t report_type, uint8_t *report, uint32_t report_len)
+{
+#ifdef RGB_RAW_ENABLE
+    if (intf == InterfaceNumber_extra_key && report_type == USB_REQUEST_SET_FEATURE) {
+        receive_rgb_raw_control(report_id, report, report_len);
+    }
+#endif
+}
+
+void usbd_hid_set_idle(uint8_t intf, uint8_t report_id, uint8_t duration)
 {
     keyboard_idle = duration;
 #ifdef NKRO_ENABLE
@@ -379,7 +421,7 @@ void usbh_hid_set_idle(uint8_t intf, uint8_t report_id, uint8_t duration)
     }
 }
 
-void usbh_hid_set_protocol(uint8_t intf, uint8_t protocol)
+void usbd_hid_set_protocol(uint8_t intf, uint8_t protocol)
 {
     if (intf == InterfaceNumber_keyboard) {
         keyboard_protocol = protocol;
@@ -427,6 +469,9 @@ void usbd_event_handler(uint8_t event)
     }
 }
 
+#if defined ESB_ENABLE && ESB_ENABLE == 2
+__HIGH_CODE
+#endif
 bool hid_keyboard_send_report(uint8_t mode, uint8_t *data, uint8_t len)
 {
     if (mode != keyboard_current_mode) {
@@ -466,12 +511,18 @@ bool hid_keyboard_send_report(uint8_t mode, uint8_t *data, uint8_t len)
     return true;
 }
 
+#if defined ESB_ENABLE && ESB_ENABLE == 2
+__HIGH_CODE
+#endif
 void hid_keyboard_send_last_bios_report()
 {
     hid_keyboard_send_report(KEYBOARD_MODE_BIOS, keyboard_last_bios_report, KEYBOARD_REPORT_SIZE);
 }
 
 #ifdef RGB_RAW_ENABLE
+#if defined ESB_ENABLE && ESB_ENABLE == 2
+__HIGH_CODE
+#endif
 bool hid_rgb_raw_send_report(uint8_t *data, uint8_t len)
 {
     if (!usb_remote_wakeup()) {
@@ -502,6 +553,9 @@ bool hid_rgb_raw_send_report(uint8_t *data, uint8_t len)
 }
 #endif
 
+#if defined ESB_ENABLE && ESB_ENABLE == 2
+__HIGH_CODE
+#endif
 inline bool hid_exkey_send_report(uint8_t *data, uint8_t len)
 {
     if (!usb_remote_wakeup()) {
@@ -532,6 +586,9 @@ inline bool hid_exkey_send_report(uint8_t *data, uint8_t len)
 }
 
 #ifdef RAW_ENABLE
+#if defined ESB_ENABLE && ESB_ENABLE == 2
+__HIGH_CODE
+#endif
 bool hid_qmk_raw_send_report(uint8_t *data, uint8_t len)
 {
     if (!usb_remote_wakeup()) {

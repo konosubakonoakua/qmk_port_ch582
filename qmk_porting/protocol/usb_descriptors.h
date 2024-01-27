@@ -24,6 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "usb_descriptor_common.h"
 #ifdef RGB_RAW_ENABLE
 #include "auxiliary_rgb.h"
+#include "dynamic_lighting.h"
 #endif
 
 enum {
@@ -75,36 +76,36 @@ const uint8_t KeyboardReport[] = {
 
 #ifdef NKRO_ENABLE
 const uint8_t NkroReport[] = {
-    0x05, 0x01,                                  // Usage Page (Generic Desktop)
-    0x09, 0x06,                                  // Usage (Keyboard)
-    0xA1, 0x01,                                  // Collection (Application),
-    0x85, REPORT_ID_NKRO,                        //   REPORT_ID
-    0x75, 0x01,                                  //   Report Size (1),
-    0x95, 0x08,                                  //   Report Count (8),
-    0x05, 0x07,                                  //   Usage Page (Key Codes),
-    0x19, 0xE0,                                  //   Usage Minimum (224),
-    0x29, 0xE7,                                  //   Usage Maximum (231),
-    0x15, 0x00,                                  //   Logical Minimum (0),
-    0x25, 0x01,                                  //   Logical Maximum (1),
-    0x81, 0x02,                                  //   Input (Data, Variable, Absolute), ;Modifier byte
-    0x95, KEYBOARD_REPORT_BITS * 8,              //   Report Count (),
-    0x75, 0x01,                                  //   Report Size (1),
-    0x15, 0x00,                                  //   Logical Minimum (0),
-    0x25, 0x01,                                  //   Logical Maximum(1),
-    0x05, 0x07,                                  //   Usage Page (Key Codes),
-    0x19, 0x00,                                  //   Usage Minimum (0),
-    0x29, (KEYBOARD_REPORT_BITS * 8 - 1) & 0xFF, //   Usage Maximum (),
-    0x81, 0x02,                                  //   Input (Data, Variable, Absolute),
-    0x05, 0x08,                                  //   Usage Page (LED)
-    0x19, 0x01,                                  //   Usage Minimum (Num Lock)
-    0x29, 0x05,                                  //   Usage Maximum (Kana)
-    0x95, 0x05,                                  //   Report Count (5)
-    0x75, 0x01,                                  //   Report Size (1)
-    0x91, 0x02,                                  //   Output (Data, Variable, Absolute)
-    0x95, 0x01,                                  //   Report Count (1)
-    0x75, 0x03,                                  //   Report Size (3)
-    0x91, 0x03,                                  //   Output (Constant)
-    0xC0,                                        // End Collection
+    0x05, 0x01,                              // Usage Page (Generic Desktop)
+    0x09, 0x06,                              // Usage (Keyboard)
+    0xA1, 0x01,                              // Collection (Application),
+    0x85, REPORT_ID_NKRO,                    //   REPORT_ID
+    0x75, 0x01,                              //   Report Size (1),
+    0x95, 0x08,                              //   Report Count (8),
+    0x05, 0x07,                              //   Usage Page (Key Codes),
+    0x19, 0xE0,                              //   Usage Minimum (224),
+    0x29, 0xE7,                              //   Usage Maximum (231),
+    0x15, 0x00,                              //   Logical Minimum (0),
+    0x25, 0x01,                              //   Logical Maximum (1),
+    0x81, 0x02,                              //   Input (Data, Variable, Absolute), ;Modifier byte
+    0x95, NKRO_REPORT_BITS * 8,              //   Report Count (),
+    0x75, 0x01,                              //   Report Size (1),
+    0x15, 0x00,                              //   Logical Minimum (0),
+    0x25, 0x01,                              //   Logical Maximum(1),
+    0x05, 0x07,                              //   Usage Page (Key Codes),
+    0x19, 0x00,                              //   Usage Minimum (0),
+    0x29, (NKRO_REPORT_BITS * 8 - 1) & 0xFF, //   Usage Maximum (),
+    0x81, 0x02,                              //   Input (Data, Variable, Absolute),
+    0x05, 0x08,                              //   Usage Page (LED)
+    0x19, 0x01,                              //   Usage Minimum (Num Lock)
+    0x29, 0x05,                              //   Usage Maximum (Kana)
+    0x95, 0x05,                              //   Report Count (5)
+    0x75, 0x01,                              //   Report Size (1)
+    0x91, 0x02,                              //   Output (Data, Variable, Absolute)
+    0x95, 0x01,                              //   Report Count (1)
+    0x75, 0x03,                              //   Report Size (3)
+    0x91, 0x03,                              //   Output (Constant)
+    0xC0,                                    // End Collection
 };
 #endif
 
@@ -196,6 +197,163 @@ const uint8_t ExtrakeyReport[] = {
     0x75, 0x10,               //   Report Size (16)
     0x81, 0x00,               //   Input (Data, Array, Absolute)
     0xC0,                     // End Collection
+#ifdef RGB_RAW_ENABLE
+    0x05, 0x59,                               // Usage Page (LightingAndIllumination)
+    0x09, 0x01,                               // Usage (LampArray)
+    0xa1, 0x01,                               // Collection (Application)
+    0x85, LAMP_ARRAY_ATTRIBUTES_REPORT_ID,    //   REPORT_ID
+    0x09, 0x02,                               //   Usage (LampArrayAttributesReport)
+    0xa1, 0x02,                               //   Collection (Logical)
+    0x09, 0x03,                               //     Usage (LampCount)
+    0x15, 0x00,                               //     Logical Minimum (0)
+    0x27, 0xff, 0xff, 0x00, 0x00,             //     Logical Maximum (65535)
+    0x75, 0x10,                               //     Report Size (16)
+    0x95, 0x01,                               //     Report Count (1)
+    0xb1, 0x03,                               //     Feature (Cnst,Var,Abs)
+    0x09, 0x04,                               //     Usage (BoundingBoxWidthInMicrometers)
+    0x09, 0x05,                               //     Usage (BoundingBoxHeightInMicrometers)
+    0x09, 0x06,                               //     Usage (BoundingBoxDepthInMicrometers)
+    0x09, 0x07,                               //     Usage (LampArrayKind)
+    0x09, 0x08,                               //     Usage (MinUpdateIntervalInMicroseconds)
+    0x15, 0x00,                               //     Logical Minimum (0)
+    0x27, 0xff, 0xff, 0xff, 0x7f,             //     Logical Maximum (2147483647)
+    0x75, 0x20,                               //     Report Size (32)
+    0x95, 0x05,                               //     Report Count (5)
+    0xb1, 0x03,                               //     Feature (Cnst,Var,Abs)
+    0xc0,                                     //   End Collection
+    0x85, LAMP_ATTRIBUTES_REQUEST_REPORT_ID,  //   REPORT_ID
+    0x09, 0x20,                               //   Usage (LampAttributesRequestReport)
+    0xa1, 0x02,                               //   Collection (Logical)
+    0x09, 0x21,                               //     Usage (LampId)
+    0x15, 0x00,                               //     Logical Minimum (0)
+    0x27, 0xff, 0xff, 0x00, 0x00,             //     Logical Maximum (65535)
+    0x75, 0x10,                               //     Report Size (16)
+    0x95, 0x01,                               //     Report Count (1)
+    0xb1, 0x02,                               //     Feature (Data,Var,Abs)
+    0xc0,                                     //   End Collection
+    0x85, LAMP_ATTRIBUTES_RESPONSE_REPORT_ID, //   REPORT_ID
+    0x09, 0x22,                               //   Usage (LampAttributesReponseReport)
+    0xa1, 0x02,                               //   Collection (Logical)
+    0x09, 0x21,                               //     Usage (LampId)
+    0x15, 0x00,                               //     Logical Minimum (0)
+    0x27, 0xff, 0xff, 0x00, 0x00,             //     Logical Maximum (65535)
+    0x75, 0x10,                               //     Report Size (16)
+    0x95, 0x01,                               //     Report Count (1)
+    0xb1, 0x02,                               //     Feature (Data,Var,Abs)
+    0x09, 0x23,                               //     Usage (PositionXInMicrometers)
+    0x09, 0x24,                               //     Usage (PositionYInMicrometers)
+    0x09, 0x25,                               //     Usage (PositionZInMicrometers)
+    0x09, 0x27,                               //     Usage (UpdateLatencyInMicroseconds)
+    0x09, 0x26,                               //     Usage (LampPurposes)
+    0x15, 0x00,                               //     Logical Minimum (0)
+    0x27, 0xff, 0xff, 0xff, 0x7f,             //     Logical Maximum (2147483647)
+    0x75, 0x20,                               //     Report Size (32)
+    0x95, 0x05,                               //     Report Count (5)
+    0xb1, 0x02,                               //     Feature (Data,Var,Abs)
+    0x09, 0x28,                               //     Usage (RedLevelCount)
+    0x09, 0x29,                               //     Usage (GreenLevelCount)
+    0x09, 0x2a,                               //     Usage (BlueLevelCount)
+    0x09, 0x2b,                               //     Usage (IntensityLevelCount)
+    0x09, 0x2c,                               //     Usage (IsProgrammable)
+    0x09, 0x2d,                               //     Usage (InputBinding)
+    0x15, 0x00,                               //     Logical Minimum (0)
+    0x26, 0xff, 0x00,                         //     Logical Maximum (255)
+    0x75, 0x08,                               //     Report Size (8)
+    0x95, 0x06,                               //     Report Count (6)
+    0xb1, 0x02,                               //     Feature (Data,Var,Abs)
+    0xc0,                                     //   End Collection
+    0x85, LAMP_MULTI_UPDATE_REPORT_ID,        //   REPORT_ID
+    0x09, 0x50,                               //   Usage (LampMultiUpdateReport)
+    0xa1, 0x02,                               //   Collection (Logical)
+    0x09, 0x03,                               //     Usage (LampCount)
+    0x09, 0x55,                               //     Usage (LampUpdateFlags)
+    0x15, 0x00,                               //     Logical Minimum (0)
+    0x25, 0x08,                               //     Logical Maximum (8)
+    0x75, 0x08,                               //     Report Size (8)
+    0x95, 0x02,                               //     Report Count (2)
+    0xb1, 0x02,                               //     Feature (Data,Var,Abs)
+    0x09, 0x21,                               //     Usage (LampId)
+    0x15, 0x00,                               //     Logical Minimum (0)
+    0x27, 0xff, 0xff, 0x00, 0x00,             //     Logical Maximum (65535)
+    0x75, 0x10,                               //     Report Size (16)
+    0x95, 0x08,                               //     Report Count (8)
+    0xb1, 0x02,                               //     Feature (Data,Var,Abs)
+    0x09, 0x51,                               //     Usage (RedUpdateChannel)
+    0x09, 0x52,                               //     Usage (GreenUpdateChannel)
+    0x09, 0x53,                               //     Usage (BlueUpdateChannel)
+    0x09, 0x54,                               //     Usage (IntensityUpdateChannel)
+    0x09, 0x51,                               //     Usage (RedUpdateChannel)
+    0x09, 0x52,                               //     Usage (GreenUpdateChannel)
+    0x09, 0x53,                               //     Usage (BlueUpdateChannel)
+    0x09, 0x54,                               //     Usage (IntensityUpdateChannel)
+    0x09, 0x51,                               //     Usage (RedUpdateChannel)
+    0x09, 0x52,                               //     Usage (GreenUpdateChannel)
+    0x09, 0x53,                               //     Usage (BlueUpdateChannel)
+    0x09, 0x54,                               //     Usage (IntensityUpdateChannel)
+    0x09, 0x51,                               //     Usage (RedUpdateChannel)
+    0x09, 0x52,                               //     Usage (GreenUpdateChannel)
+    0x09, 0x53,                               //     Usage (BlueUpdateChannel)
+    0x09, 0x54,                               //     Usage (IntensityUpdateChannel)
+    0x09, 0x51,                               //     Usage (RedUpdateChannel)
+    0x09, 0x52,                               //     Usage (GreenUpdateChannel)
+    0x09, 0x53,                               //     Usage (BlueUpdateChannel)
+    0x09, 0x54,                               //     Usage (IntensityUpdateChannel)
+    0x09, 0x51,                               //     Usage (RedUpdateChannel)
+    0x09, 0x52,                               //     Usage (GreenUpdateChannel)
+    0x09, 0x53,                               //     Usage (BlueUpdateChannel)
+    0x09, 0x54,                               //     Usage (IntensityUpdateChannel)
+    0x09, 0x51,                               //     Usage (RedUpdateChannel)
+    0x09, 0x52,                               //     Usage (GreenUpdateChannel)
+    0x09, 0x53,                               //     Usage (BlueUpdateChannel)
+    0x09, 0x54,                               //     Usage (IntensityUpdateChannel)
+    0x09, 0x51,                               //     Usage (RedUpdateChannel)
+    0x09, 0x52,                               //     Usage (GreenUpdateChannel)
+    0x09, 0x53,                               //     Usage (BlueUpdateChannel)
+    0x09, 0x54,                               //     Usage (IntensityUpdateChannel)
+    0x15, 0x00,                               //     Logical Minimum (0)
+    0x26, 0xff, 0x00,                         //     Logical Maximum (255)
+    0x75, 0x08,                               //     Report Size (8)
+    0x95, 0x20,                               //     Report Count (32)
+    0xb1, 0x02,                               //     Feature (Data,Var,Abs)
+    0xc0,                                     //   End Collection
+    0x85, LAMP_RANGE_UPDATE_REPORT_ID,        //   REPORT_ID
+    0x09, 0x60,                               //   Usage (LampRangeUpdateReport)
+    0xa1, 0x02,                               //   Collection (Logical)
+    0x09, 0x55,                               //     Usage (LampUpdateFlags)
+    0x15, 0x00,                               //     Logical Minimum (0)
+    0x25, 0x08,                               //     Logical Maximum (8)
+    0x75, 0x08,                               //     Report Size (8)
+    0x95, 0x01,                               //     Report Count (1)
+    0xb1, 0x02,                               //     Feature (Data,Var,Abs)
+    0x09, 0x61,                               //     Usage (LampIdStart)
+    0x09, 0x62,                               //     Usage (LampIdEnd)
+    0x15, 0x00,                               //     Logical Minimum (0)
+    0x27, 0xff, 0xff, 0x00, 0x00,             //     Logical Maximum (65535)
+    0x75, 0x10,                               //     Report Size (16)
+    0x95, 0x02,                               //     Report Count (2)
+    0xb1, 0x02,                               //     Feature (Data,Var,Abs)
+    0x09, 0x51,                               //     Usage (RedUpdateChannel)
+    0x09, 0x52,                               //     Usage (GreenUpdateChannel)
+    0x09, 0x53,                               //     Usage (BlueUpdateChannel)
+    0x09, 0x54,                               //     Usage (IntensityUpdateChannel)
+    0x15, 0x00,                               //     Logical Minimum (0)
+    0x26, 0xff, 0x00,                         //     Logical Maximum (255)
+    0x75, 0x08,                               //     Report Size (8)
+    0x95, 0x04,                               //     Report Count (4)
+    0xb1, 0x02,                               //     Feature (Data,Var,Abs)
+    0xc0,                                     //   End Collection
+    0x85, LAMP_ARRAY_CONTROL_REPORT_ID,       //   REPORT_ID
+    0x09, 0x70,                               //   Usage (LampArrayControlReport)
+    0xa1, 0x02,                               //   Collection (Logical)
+    0x09, 0x71,                               //     Usage (AutonomousMode)
+    0x15, 0x00,                               //     Logical Minimum (0)
+    0x25, 0x01,                               //     Logical Maximum (1)
+    0x75, 0x08,                               //     Report Size (8)
+    0x95, 0x01,                               //     Report Count (1)
+    0xb1, 0x02,                               //     Feature (Data,Var,Abs)
+    0xc0,                                     //   End Collection
+    0xc0                                      // End Collection
+#endif
 };
 
 #ifdef RAW_ENABLE
@@ -306,12 +464,12 @@ const uint8_t hid_descriptor_scratch_2_bios[] = {
     0x01,                     /* nInterfaceProtocol : 0=none, 1=keyboard, 2=mouse */
     0x00,                     /* iInterface: Index of string descriptor */
     /******************** Descriptor of Keyboard HID ********************/
-    0x09,                      /* bLength */
-    0x21,                      /* bDescriptorType */
-    0x11, 0x01,                /* bcdHID */
-    0x00,                      /* bCountryCode */
-    0x01,                      /* bNumDescriptors */
-    0x22,                      /* bDescriptorType */
+    0x09,                          /* bLength */
+    0x21,                          /* bDescriptorType */
+    0x11, 0x01,                    /* bcdHID */
+    0x00,                          /* bCountryCode */
+    0x01,                          /* bNumDescriptors */
+    0x22,                          /* bDescriptorType */
     WBVAL(sizeof(KeyboardReport)), /* wItemLength */
     /******************** Descriptor of Keyboard in endpoint ********************/
     0x07,                  /* bLength */

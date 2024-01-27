@@ -44,7 +44,7 @@ led_config_t g_led_config = {
 	}
 };
 
-#ifdef AW20216
+#ifdef AW20216S
 const aw_led g_aw_leds[DRIVER_LED_TOTAL] = {
     {0, CS1_SW1, CS2_SW1, CS3_SW1},        //  0, ESC, k13
     {0, CS4_SW1, CS5_SW1, CS6_SW1},        //  1, ~, k16
@@ -70,17 +70,10 @@ const aw_led g_aw_leds[DRIVER_LED_TOTAL] = {
 
 bool rgb_matrix_indicators_advanced_kb(uint8_t led_min, uint8_t led_max)
 {
-    if (!rgb_matrix_indicators_advanced_user(led_min, led_max)) {
-        return false;
-    }
     if (led_min <= 0 && led_max > 0 && host_keyboard_led_state().num_lock) {
         RGB_MATRIX_INDICATOR_SET_COLOR(0, 0xFF, 0x00, 0x00);
     }
-#if defined BATTERY_MEASURE_PIN || defined BLE_ENABLE
-    extern void wireless_rgb_indicator_task(uint8_t led_min, uint8_t led_max);
 
-    wireless_rgb_indicator_task(led_min, led_max);
-#endif
     return true;
 }
 

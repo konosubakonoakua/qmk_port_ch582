@@ -19,11 +19,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <stdio.h>
 #include "HAL.h"
 #include "gpio.h"
+#include "quantum.h"
 #include "quantum_keycodes.h"
-#include "battery_measure.h"
 
 volatile uint8_t kbd_protocol_type = 0;
 #if defined BLE_ENABLE || (defined ESB_ENABLE && (ESB_ENABLE == 1 || ESB_ENABLE == 2))
+extern void wireless_indicator_status_reset();
 #else
 __attribute__((aligned(4))) uint32_t MEM_BUF[BLE_MEMHEAP_SIZE / 4];
 #endif
@@ -37,9 +38,12 @@ int8_t sendchar(uint8_t c)
 }
 
 #if !defined ESB_ENABLE || ESB_ENABLE == 1
-void shutdown_user()
+bool shutdown_kb(bool jump_to_bootloader)
 {
     rgbled_power_off();
+#if defined BLE_ENABLE || (defined ESB_ENABLE && (ESB_ENABLE == 1 || ESB_ENABLE == 2))
+    wireless_indicator_status_reset();
+#endif
 
 #ifdef ENCODER_ENABLE
     pin_t encoders_pad_a[] = ENCODERS_PAD_A, encoders_pad_b[] = ENCODERS_PAD_B;
@@ -51,6 +55,12 @@ void shutdown_user()
         setPinInputLow(encoders_pad_b[i]);
     }
 #endif
+
+    if (!shutdown_user(jump_to_bootloader)) {
+        return false;
+    }
+
+    return true;
 }
 #endif
 

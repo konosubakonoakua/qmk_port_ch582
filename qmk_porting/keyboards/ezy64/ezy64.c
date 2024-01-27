@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #ifdef RGB_MATRIX_ENABLE
 
-#ifdef AW20216
+#ifdef AW20216S
 const aw_led PROGMEM g_aw_leds[DRIVER_LED_TOTAL] = {
     { 0, CS1_SW1, CS2_SW1, CS3_SW1 },
     { 0, CS4_SW1, CS5_SW1, CS6_SW1 },
@@ -108,7 +108,7 @@ const aw_led PROGMEM g_aw_leds[DRIVER_LED_TOTAL] = {
 
 void spi_master_pre_transmit_cb()
 {
-    aw20216_power_check();
+    aw20216s_power_check();
 }
 
 #endif
@@ -137,19 +137,12 @@ led_config_t g_led_config = {
 };
 /* clang-format on */
 
-bool rgb_matrix_indicators_advanced_kb(uint8_t led_min, uint8_t led_max)
+bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max)
 {
-    if (!rgb_matrix_indicators_advanced_user(led_min, led_max)) {
-        return false;
-    }
     if (led_min <= 28 && led_max > 28 && host_keyboard_led_state().caps_lock) {
         RGB_MATRIX_INDICATOR_SET_COLOR(28, 0xFF, 0x00, 0x00);
     }
-#if defined BATTERY_MEASURE_PIN || defined BLE_ENABLE
-    extern void wireless_rgb_indicator_task(uint8_t led_min, uint8_t led_max);
 
-    wireless_rgb_indicator_task(led_min, led_max);
-#endif
     return true;
 }
 

@@ -91,13 +91,13 @@ __HIGH_CODE void gpio_strap()
     pin_a &= ~bX32KI;
     pin_a &= ~bX32KO;
 #endif
-#ifdef WS2812
+#if defined WS2812 && defined WS2812_EN_PIN
     if (WS2812_EN_PIN & 0x80000000) {
         pin_b &= ~(WS2812_EN_PIN & 0x7FFFFFFF);
     } else {
         pin_a &= ~(WS2812_EN_PIN & 0x7FFFFFFF);
     }
-#elif defined AW20216
+#elif defined AW20216S
     if (DRIVER_1_CS & 0x80000000) {
         pin_b &= ~(DRIVER_1_CS & 0x7FFFFFFF);
     } else {
@@ -154,13 +154,13 @@ __attribute__((noinline)) __attribute__((weak)) void battery_critical_gpio_prere
     pin_a &= ~bX32KI;
     pin_a &= ~bX32KO;
 #endif
-#ifdef WS2812
+#if defined WS2812 && defined WS2812_EN_PIN
     if (WS2812_EN_PIN & 0x80000000) {
         pin_b &= ~(WS2812_EN_PIN & 0x7FFFFFFF);
     } else {
         pin_a &= ~(WS2812_EN_PIN & 0x7FFFFFFF);
     }
-#elif defined AW20216
+#elif defined AW20216S
     if (DRIVER_1_EN & 0x80000000) {
         pin_b &= ~(DRIVER_1_EN & 0x7FFFFFFF);
     } else {

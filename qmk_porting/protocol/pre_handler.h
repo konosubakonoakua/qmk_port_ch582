@@ -149,7 +149,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #if defined BLE_ENABLE || (defined ESB_ENABLE && ESB_ENABLE == 1)
 #define NO_USB_STARTUP_CHECK
 #ifndef BATTERY_MEASURE_PIN
-#error "Battery measure pin undefined."
+#warning "Battery measure pin undefined."
 #else
 #endif
 #ifndef POWER_DETECT_PIN
@@ -264,15 +264,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define SEND_STRING_ENABLE
 #endif
 
-#ifdef NKRO_ENABLE
-// a special trick
-#define PROTOCOL_LUFA
-#define ENDPOINT_TOTAL_ENDPOINTS 5
-#else
-#ifdef FORCE_NKRO
+#if !defined NKRO_ENABLE && defined FORCE_NKRO
 #undef FORCE_NKRO
 #endif
-#endif
+
+// #ifdef RGB_RAW_ENABLE
+// #define ENDPOINT_TOTAL_ENDPOINTS 8
+// #else
+#define ENDPOINT_TOTAL_ENDPOINTS 5
+// #endif
+
+#define MAX_ENDPOINTS ENDPOINT_TOTAL_ENDPOINTS
 
 #if defined LSE_ENABLE && LSE_ENABLE
 #define FREQ_RTC   32768
@@ -295,7 +297,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #define SLEEP_RTC_MAX_TIME (RTC_TIMER_MAX_VALUE - TMOS_TIME_VALID)
 
-#if defined AW20216 && !defined AW_SPI_DIVISOR
+#if defined AW20216S && !defined AW_SPI_DIVISOR
 #define AW_SPI_DIVISOR (FREQ_SYS / 5000000)
 #endif
 
@@ -353,6 +355,8 @@ enum {
 #error "Too many BLE slots! Cap: 16"
 #endif
 
+#define BLE_SNV_NUM ((EEPROM_MAX_SIZE - BLE_SNV_ADDR) / BLE_SNV_BLOCK)
+
 #ifdef BATTERY_MEASURE_PIN
 #if BATTERY_MEASURE_PIN != A7 && BATTERY_MEASURE_PIN != A8 && BATTERY_MEASURE_PIN != A9 &&   \
     BATTERY_MEASURE_PIN != A4 && BATTERY_MEASURE_PIN != A5 && BATTERY_MEASURE_PIN != A6 &&   \
@@ -365,4 +369,13 @@ enum {
 
 #if !defined USB_ENABLE && !defined BLE_ENABLE && !defined ESB_ENABLE
 #error "No interface enabled!"
+#endif
+
+#define memcmp(...)              tmos_memcmp(__VA_ARGS__) ? 0 : 1
+#define strlen(pString)          tmos_strlen((char *)(pString))
+#define memset(pDst, Value, len) tmos_memset(pDst, (int)(Value), (size_t)(len))
+#define memcpy                   tmos_memcpy
+
+#ifdef RGB_MATRIX_ENABLE
+#include "rgb_matrix/post_config.h"
 #endif
